@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pathfinder — Find the work you were built for</title>
+<meta name="description" content="18 sharp questions. One AI-written personal analysis: the work you should be doing, the business you could build, and your first step this week." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Sora:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#231A3C; --paper:#EFECF6; --signal:#FF5C38; --violet:#6C4CF1;
+    --mist:#DCD6EA; --faint:#8B82A6; --body2:#4A4162;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:'Sora',sans-serif;min-height:100vh}
+  .mono{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600}
+  .display{font-family:'Fraunces',serif;font-weight:600;line-height:1.08;letter-spacing:-0.02em}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:20px 28px;max-width:980px;margin:0 auto}
+  .wrap{max-width:680px;margin:0 auto;padding:12px 28px 90px}
+  .center{text-align:center}
+  .cta{font-family:'Sora',sans-serif;font-weight:600;font-size:15px;padding:14px 28px;border-radius:999px;border:none;background:var(--signal);color:#fff;cursor:pointer;transition:transform .15s;box-shadow:0 4px 20px rgba(255,92,56,.35)}
+  .cta:hover{transform:translateY(-2px)}
+  .cta:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .cta.secondary{background:transparent;color:var(--ink);border:1.5px solid var(--ink);box-shadow:none}
+  .opt{display:block;width:100%;text-align:left;padding:16px 20px;border-radius:14px;border:1.5px solid var(--mist);background:#fff;color:var(--ink);font-family:'Sora',sans-serif;font-size:15px;line-height:1.45;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s;margin-bottom:12px}
+  .opt:hover{border-color:var(--signal);transform:translateX(4px);box-shadow:0 4px 16px rgba(35,26,60,.08)}
+  .progress{height:4px;background:var(--mist);border-radius:99px;margin-bottom:36px}
+  .progress>div{height:100%;background:var(--signal);border-radius:99px;transition:width .4s}
+  .card{background:#fff;border:1.5px solid var(--mist);border-radius:16px;padding:20px 22px;margin-bottom:12px;text-align:left}
+  .row{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1.5px solid var(--mist);border-radius:14px;padding:14px 18px;margin-bottom:10px;line-height:1.6;font-size:15px;text-align:left}
+  .dot{width:8px;height:8px;border-radius:99px;margin-top:7px;flex-shrink:0}
+  input,textarea{width:100%;padding:14px 18px;border-radius:14px;border:1.5px solid var(--mist);font-family:'Sora',sans-serif;font-size:15px;color:var(--ink);background:#fff}
+  input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--violet);outline-offset:2px}
+  .quizgrid{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+  .quizgrid .qcol{flex:1 1 340px}
+  .quizgrid .mapcol{flex:0 0 auto;margin:0 auto}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .pulse{animation:pulse 1.6s ease-in-out infinite}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  .blurbox{position:relative;background:#fff;border-radius:20px;padding:28px 26px;text-align:left;border:1.5px solid var(--mist);overflow:hidden}
+  .blurred{filter:blur(7px);user-select:none;pointer-events:none}
+  .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.88) 55%);padding:24px}
+  .quote{background:var(--ink);color:#fff;border-radius:20px;padding:30px 28px;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="mono" style="color:var(--ink)">PATHFINDER</div>
+  <div class="mono" id="counter"></div>
+</div>
+<div id="app" class="wrap"></div>
+
+<script>
+/* ================= CONFIG — EDIT THESE TWO LINES ================= */
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/REPLACE_ME"; // your $5 Payment Link
+const TEST_MODE = true; // true = "Simulate payment" button shown (needs ALLOW_TEST_PAYMENTS=true on server). Set false before launch!
+/* ================================================================= */
+
+const TRAITS = ["Vision","Craft","People","Drive","Risk","Structure"];
+
+const QUESTIONS = [
+ {q:"It's 4pm on a good workday. What actually gave you energy today?",opts:[
+  {t:"I connected dots nobody else saw",w:{Vision:2,Risk:1}},
+  {t:"I made something and it works",w:{Craft:2,Structure:1}},
+  {t:"A conversation that changed someone's mind",w:{People:2,Drive:1}},
+  {t:"I crossed off everything on the list",w:{Structure:2,Drive:1}}]},
+ {q:"A new idea hits you in the shower. First instinct?",opts:[
+  {t:"Sketch the whole future of it",w:{Vision:2}},
+  {t:"Build a rough version tonight",w:{Craft:2,Drive:1}},
+  {t:"Text three people to gut-check it",w:{People:2}},
+  {t:"Research who's already tried it",w:{Structure:2}}]},
+ {q:"Which of these is most true about you and risk?",opts:[
+  {t:"I'd bet a year of my life on the right idea",w:{Risk:2,Vision:1}},
+  {t:"I take calculated bets with a safety net",w:{Risk:1,Structure:2}},
+  {t:"I'll jump if someone jumps with me",w:{People:2,Risk:1}},
+  {t:"Stability first, adventure inside the lines",w:{Structure:2}}]},
+ {q:"Money, honestly, is…",opts:[
+  {t:"Fuel — it buys freedom to build",w:{Drive:2,Vision:1}},
+  {t:"A scoreboard — I like winning",w:{Drive:2,Risk:1}},
+  {t:"Security — I never want to worry",w:{Structure:2}},
+  {t:"A tool for the life I want, nothing more",w:{People:1,Craft:1}}]},
+ {q:"Which compliment lands the deepest?",opts:[
+  {t:"\u201CYou see things before everyone else\u201D",w:{Vision:2}},
+  {t:"\u201CThe quality of your work is insane\u201D",w:{Craft:2}},
+  {t:"\u201CPeople would follow you anywhere\u201D",w:{People:2}},
+  {t:"\u201CYou just don't stop, do you\u201D",w:{Drive:2}}]},
+ {q:"What do friends actually come to you for?",opts:[
+  {t:"Big-picture life and career advice",w:{Vision:2,People:1}},
+  {t:"To fix, build, or figure something out",w:{Craft:2}},
+  {t:"To talk through feelings and conflicts",w:{People:2}},
+  {t:"To get organized and make a plan",w:{Structure:2}}]},
+ {q:"Design your ideal Tuesday.",opts:[
+  {t:"Deep work alone, phone in another room",w:{Craft:2,Structure:1}},
+  {t:"Back-to-back conversations with interesting people",w:{People:2,Drive:1}},
+  {t:"Half strategy, half making things happen",w:{Vision:1,Drive:2}},
+  {t:"No plan at all — I follow the energy",w:{Risk:2,Vision:1}}]},
+ {q:"Big decision on the table. You trust…",opts:[
+  {t:"My gut — it's rarely wrong",w:{Risk:2,Vision:1}},
+  {t:"The data — feelings lie, numbers don't",w:{Structure:2}},
+  {t:"The smartest person I can find",w:{People:2}},
+  {t:"A fast experiment over any debate",w:{Craft:1,Drive:2}}]},
+ {q:"Which chapter of a company is yours?",opts:[
+  {t:"Day zero — nothing exists yet",w:{Risk:2,Vision:2}},
+  {t:"The messy scale-up years",w:{Drive:2,People:1}},
+  {t:"Making a good thing excellent",w:{Craft:2,Structure:1}},
+  {t:"Running the machine smoothly",w:{Structure:2}}]},
+ {q:"A camera turns on and it's pointed at you. You feel…",opts:[
+  {t:"Alive — this is my element",w:{People:2,Drive:1}},
+  {t:"Fine, if I know my material",w:{Structure:1,Craft:1}},
+  {t:"I'd rather be the one directing",w:{Vision:2}},
+  {t:"Genuinely allergic",w:{Craft:2}}]},
+ {q:"Selling something you believe in feels…",opts:[
+  {t:"Natural — I do it without noticing",w:{People:2,Drive:1}},
+  {t:"Fine once I'm convinced myself",w:{Craft:1,Structure:1}},
+  {t:"Better in writing than in person",w:{Vision:1,Craft:1}},
+  {t:"Uncomfortable — the work should sell itself",w:{Craft:2}}]},
+ {q:"Pick your time horizon.",opts:[
+  {t:"Income in 90 days, then we'll see",w:{Drive:2,Structure:1}},
+  {t:"Two hard years for a real asset",w:{Vision:1,Drive:1,Risk:1}},
+  {t:"A decade-long compounding game",w:{Vision:2,Structure:1}},
+  {t:"Honestly, I just don't want to be bored",w:{Risk:2}}]},
+ {q:"Right now you are…",opts:[
+  {t:"Studying (or just finished)",w:{Risk:1}},
+  {t:"Employed and restless",w:{Drive:1}},
+  {t:"Already building something",w:{Risk:1,Drive:1}},
+  {t:"Between chapters",w:{Vision:1}}]},
+ {q:"If income stopped tomorrow, you could last…",opts:[
+  {t:"Under 3 months",w:{Structure:1}},
+  {t:"3–6 months",w:{Drive:1}},
+  {t:"6–12 months",w:{Risk:1}},
+  {t:"A year or more",w:{Risk:2}}]},
+ {q:"The thing most in your way right now:",opts:[
+  {t:"Too many ideas, no commitment",w:{Vision:1}},
+  {t:"I know what to do, I don't do it",w:{Drive:1}},
+  {t:"Skills gap — I'm not there yet",w:{Craft:1}},
+  {t:"Nobody around me gets it",w:{People:1}}]},
+ {q:"Work must give you this, or it's not worth it:",opts:[
+  {t:"Ownership — my name on it",w:{Risk:2,Drive:1}},
+  {t:"Mastery — becoming great at a thing",w:{Craft:2}},
+  {t:"Impact — real people, real change",w:{People:2,Vision:1}},
+  {t:"Freedom — my time, my rules",w:{Risk:1,Vision:1}}]},
+ {q:"Which world pulls at you most?",opts:[
+  {t:"Tech, AI & building products",w:{Craft:1,Vision:1}},
+  {t:"Media, content & personal brands",w:{People:1,Drive:1}},
+  {t:"Commerce, brands & physical products",w:{Drive:1,Structure:1}},
+  {t:"Health, wellness & human potential",w:{People:1,Craft:1}}]},
+ {q:"Last one. What's the thing you keep coming back to — the idea, topic, or dream that won't leave you alone?",free:true}
+];
+
+const ARCHETYPES = {
+ "Vision+Risk":["The Founder Signal","You're wired to start what doesn't exist yet."],
+ "Vision+Craft":["The Architect","You see the future and can actually build it."],
+ "Vision+People":["The Movement Builder","Your ideas travel because people carry them."],
+ "Vision+Drive":["The Trajectory","You aim long and move fast — a rare combination."],
+ "Vision+Structure":["The Strategist","You turn foresight into systems that win."],
+ "Craft+Risk":["The Renegade Maker","You build bold things others call too early."],
+ "Craft+People":["The Trusted Expert","Your skill draws people in; your warmth keeps them."],
+ "Craft+Drive":["The Machine","Relentless output at a quality most can't match."],
+ "Craft+Structure":["The Perfectionist Engine","Excellence, repeatable. That's your edge."],
+ "People+Risk":["The Magnetic Bet","You gamble on people — and usually win."],
+ "People+Drive":["The Operator","You move people and mountains, in that order."],
+ "People+Structure":["The Quiet Leader","You build teams that outperform louder ones."],
+ "Drive+Risk":["The Momentum Player","You'd rather crash fast than idle safely."],
+ "Drive+Structure":["The Executor","You are the reason plans become reality."],
+ "Risk+Structure":["The Calculated Rebel","Wild bets, disciplined execution."]
+};
+
+/* ---------------- state ---------------- */
+let state = {
+  idx: 0,
+  answers: [],
+  traits: Object.fromEntries(TRAITS.map(t=>[t,0])),
+  email: ""
+};
+
+function archetypeFor(traits){
+  const sorted = Object.entries(traits).sort((a,b)=>b[1]-a[1]);
+  const [a,b] = [sorted[0][0], sorted[1][0]];
+  const key = Object.keys(ARCHETYPES).find(k=>k.includes(a)&&k.includes(b));
+  return ARCHETYPES[key] || ARCHETYPES["Vision+Drive"];
+}
+
+/* ---------------- Signal Map SVG ---------------- */
+function signalMap(traits,size,labels,glow){
+  const cx=size/2, cy=size/2, R=size*0.36;
+  const max=Math.max(6,...Object.values(traits));
+  const pt=(i,r)=>{const a=Math.PI*2*i/6-Math.PI/2;return [cx+Math.cos(a)*r, cy+Math.sin(a)*r];};
+  let s=`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="Your signal map">`;
+  for(const f of [0.33,0.66,1]){
+    s+=`<polygon points="${TRAITS.map((_,i)=>pt(i,R*f).join(',')).join(' ')}" fill="none" stroke="#DCD6EA" stroke-width="1"/>`;
+  }
+  for(let i=0;i<6;i++){const [x,y]=pt(i,R);s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#DCD6EA" stroke-width="1"/>`;}
+  const poly=TRAITS.map((t,i)=>{const v=Math.max(0.12,(traits[t]||0)/max);return pt(i,R*v).join(',');}).join(' ');
+  s+=`<polygon points="${poly}" fill="rgba(108,76,241,0.15)" stroke="#6C4CF1" stroke-width="2" style="${glow?'filter:drop-shadow(0 0 12px rgba(108,76,241,0.4))':''}"/>`;
+  TRAITS.forEach((t,i)=>{const v=Math.max(0.12,(traits[t]||0)/max);const [x,y]=pt(i,R*v);
+    s+=`<circle cx="${x}" cy="${y}" r="4" fill="#FF5C38"/>`;});
+  if(labels) TRAITS.forEach((t,i)=>{const [x,y]=pt(i,R+18);
+    s+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" style="font:600 9px 'IBM Plex Mono',monospace;fill:#8B82A6;letter-spacing:.08em">${t.toUpperCase()}</text>`;});
+  return s+`</svg>`;
+}
+
+/* ---------------- rendering ---------------- */
+const app=document.getElementById('app');
+const counter=document.getElementById('counter');
+const esc=(s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function renderLanding(){
+  counter.textContent='';
+  app.className='wrap center';
+  app.innerHTML=`
+    <div style="display:flex;justify-content:center;margin-bottom:8px">${signalMap({Vision:5,Craft:3,People:6,Drive:4,Risk:5,Structure:2},200,true,true)}</div>
+    <div class="mono" style="margin-bottom:16px">18 QUESTIONS · 4 MINUTES · AI-WRITTEN, ONLY FOR YOU</div>
+    <h1 class="display" style="font-size:clamp(38px,6vw,62px);margin-bottom:20px">You already know.<br><span style="color:var(--signal)">You just haven't said it out loud.</span></h1>
+    <p style="font-size:17px;line-height:1.65;color:var(--body2);max-width:520px;margin:0 auto 36px">Answer 18 sharp questions about how you actually work, decide, and take risks. Our AI reads your pattern and writes a personal analysis: the work you should be doing, the business you could build, and the first step to take this week.</p>
+    <button class="cta" id="start">Start the quiz — it's free</button>
+    <div class="mono" style="margin-top:18px">THE FULL ANALYSIS IS $5. THE QUIZ COSTS NOTHING.</div>`;
+  document.getElementById('start').onclick=()=>{renderQuiz();};
+}
+
+function renderQuiz(){
+  const cur=QUESTIONS[state.idx];
+  counter.textContent=`${String(state.idx+1).padStart(2,'0')} / ${QUESTIONS.length}`;
+  app.className='wrap';
+  const optsHtml = cur.free
+    ? `<textarea id="free" rows="4" placeholder="Be honest. Nobody sees this but the AI — and it makes your analysis dramatically better."></textarea>
+       <div style="margin-top:18px"><button class="cta" id="freego">See my result</button></div>`
+    : cur.opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o.t)}</button>`).join('');
+  app.innerHTML=`
+    <div class="progress"><div style="width:${(state.idx/QUESTIONS.length)*100}%"></div></div>
+    <div class="quizgrid">
+      <div class="qcol">
+        <h2 class="display" style="font-size:clamp(24px,3.4vw,32px);margin-bottom:26px">${esc(cur.q)}</h2>
+        ${optsHtml}
+      </div>
+      <div class="mapcol">
+        ${signalMap(state.traits,190,true,false)}
+        <div class="mono center" style="margin-top:4px">YOUR SIGNAL, FORMING</div>
+      </div>
+    </div>`;
+  if(cur.free){
+    document.getElementById('freego').onclick=()=>{
+      const v=document.getElementById('free').value.trim();
+      state.answers.push({question:cur.q,answer:v||'(left blank)'});
+      renderTeaser();
+    };
+  } else {
+    app.querySelectorAll('.opt').forEach(btn=>{
+      btn.onclick=()=>{
+        const o=cur.opts[Number(btn.dataset.i)];
+        for(const [k,v] of Object.entries(o.w||{})) state.traits[k]+=v;
+        state.answers.push({question:cur.q,answer:o.t});
+        state.idx++;
+        state.idx<QUESTIONS.length ? renderQuiz() : renderTeaser();
+      };
+    });
+  }
+}
+
+function renderTeaser(){
+  counter.textContent='';
+  const [name,line]=archetypeFor(state.traits);
+  app.className='wrap center';
+  app.innerHTML=`
+    <div style="display:flex;justify-content:center">${signalMap(state.traits,230,true,true)}</div>
+    <div class="mono" style="margin:10px 0">YOUR ARCHETYPE</div>
+    <h2 class="display" style="font-size:clamp(32px,5vw,46px);margin-bottom:10px;color:var(--violet)">${esc(name)}</h2>
+    <p style="font-size:17px;color:var(--body2);margin-bottom:30px">${esc(line)}</p>
+    <div class="blurbox">
+      <div class="blurred" aria-hidden="true">
+        <p style="margin-bottom:12px;line-height:1.7">Based on your answers, the pattern is unmistakable: you combine ${esc(name.toLowerCase())} energy with an unusual appetite for ownership. The three paths that fit you best are not the obvious ones — and the business idea hiding in your last answer is stronger than you think…</p>
+        <p style="line-height:1.7">Your first step this week: reach out to the person who already lives the life you described in question…</p>
+      </div>
+      <div class="overlay">
+        <div class="mono" style="color:var(--signal);margin-bottom:10px">YOUR FULL ANALYSIS IS READY</div>
+        <div class="display" style="font-size:22px;margin-bottom:16px">Personal read · 3 career paths · 2 business ideas · first steps</div>
+        <input type="email" id="email" placeholder="your@email.com" style="max-width:340px;text-align:center;border-radius:999px;margin-bottom:14px" value="${esc(state.email)}"/>
+        <button class="cta" id="pay" disabled>Unlock my analysis — $5</button>
+        ${TEST_MODE?'<button class="cta secondary" id="testpay" style="margin-top:10px">TEST MODE · Simulate payment</button>':''}
+        <div class="mono" style="margin-top:12px">ONE-TIME. NO SUBSCRIPTION. INSTANT.</div>
+      </div>
+    </div>`;
+  const emailEl=document.getElementById('email');
+  const payBtn=document.getElementById('pay');
+  const check=()=>{state.email=emailEl.value.trim();payBtn.disabled=!state.email.includes('@');};
+  emailEl.addEventListener('input',check);check();
+  payBtn.onclick=()=>{
+    sessionStorage.setItem('pf_state',JSON.stringify(state));
+    const url=new URL(STRIPE_PAYMENT_LINK);
+    url.searchParams.set('prefilled_email',state.email);
+    window.location.href=url.toString();
+  };
+  if(TEST_MODE){
+    document.getElementById('testpay').onclick=()=>{
+      sessionStorage.setItem('pf_state',JSON.stringify(state));
+      fetchReport('TEST');
+    };
+  }
+}
+
+function renderLoading(){
+  app.className='wrap center';
+  app.innerHTML=`
+    <div style="display:flex;justify-content:center;margin-top:40px">${signalMap(state.traits,200,true,true)}</div>
+    <div class="mono pulse" style="margin-top:20px">PAYMENT CONFIRMED · READING YOUR PATTERN · WRITING YOUR ANALYSIS</div>
+    <p style="color:var(--body2);font-size:14px;margin-top:12px">~15 seconds. It's worth it.</p>`;
+}
+
+function renderError(msg,sessionId){
+  app.className='wrap center';
+  app.innerHTML=`
+    <h3 class="display" style="font-size:24px;margin:60px 0 12px">That didn't work.</h3>
+    <p style="color:var(--body2);margin-bottom:22px">${esc(msg)}</p>
+    <button class="cta" id="retry">Try again</button>`;
+  document.getElementById('retry').onclick=()=>fetchReport(sessionId);
+}
+
+function renderReport(report){
+  counter.textContent='';
+  const [name]=archetypeFor(state.traits);
+  const paths=(report.career_paths||[]).map(p=>`
+    <div class="card"><div class="display" style="font-size:19px;margin-bottom:6px">${esc(p.title)}</div>
+    <p style="margin-bottom:10px;line-height:1.65;font-size:15px;color:#3D3556">${esc(p.why)}</p>
+    <div class="mono" style="color:var(--signal);letter-spacing:.04em;text-transform:none;font-size:12px">First step: ${esc(p.first_step)}</div></div>`).join('');
+  const biz=(report.business_ideas||[]).map(p=>`
+    <div class="card"><div class="display" style="font-size:19px;margin-bottom:6px">${esc(p.title)}</div>
+    <p style="margin-bottom:10px;line-height:1.65;font-size:15px;color:#3D3556">${esc(p.why)}</p>
+    <div class="mono" style="color:var(--signal);letter-spacing:.04em;text-transform:none;font-size:12px">First 90 days: ${esc(p.first_90_days)}</div></div>`).join('');
+  app.className='wrap';
+  app.innerHTML=`
+    <div class="center" style="margin-bottom:34px">
+      <div style="display:flex;justify-content:center">${signalMap(state.traits,210,true,true)}</div>
+      <div class="mono" style="margin:8px 0">PERSONAL ANALYSIS · ${new Date().toLocaleDateString('en-GB')}</div>
+      <h2 class="display" style="font-size:clamp(30px,4.6vw,42px);color:var(--violet)">${esc(name)}</h2>
+    </div>
+    <div class="mono" style="margin-bottom:12px">THE READ</div>
+    <p style="line-height:1.75;font-size:16px;margin-bottom:30px">${esc(report.summary||'')}</p>
+    <div class="mono" style="margin-bottom:12px">YOUR EDGE</div>
+    ${(report.strengths||[]).map(s=>`<div class="row"><span class="dot" style="background:var(--violet)"></span><span>${esc(s)}</span></div>`).join('')}
+    <div class="mono" style="margin:20px 0 12px">WATCH OUT FOR</div>
+    ${(report.watchouts||[]).map(s=>`<div class="row"><span class="dot" style="background:var(--signal)"></span><span>${esc(s)}</span></div>`).join('')}
+    <div class="mono" style="margin:20px 0 12px">THREE PATHS THAT FIT</div>
+    ${paths}
+    <div class="mono" style="margin:20px 0 12px">TWO BUSINESSES YOU COULD BUILD</div>
+    ${biz}
+    <div class="quote">
+      <div class="mono" style="color:#B7AEDB;margin-bottom:10px">REMEMBER THIS</div>
+      <div class="display" style="font-size:clamp(20px,3vw,26px);line-height:1.35">&ldquo;${esc(report.one_liner||'')}&rdquo;</div>
+    </div>`;
+}
+
+/* ---------------- server call ---------------- */
+async function fetchReport(sessionId){
+  renderLoading();
+  try{
+    const [name]=archetypeFor(state.traits);
+    const res=await fetch('/.netlify/functions/analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({session_id:sessionId,answers:state.answers,traits:state.traits,archetype:name,email:state.email})
+    });
+    if(!res.ok){
+      const e=await res.json().catch(()=>({}));
+      throw new Error(e.error||`Server error (${res.status})`);
+    }
+    const report=await res.json();
+    // clean the session_id out of the URL so refresh doesn't retry
+    history.replaceState({},'',window.location.pathname);
+    renderReport(report);
+  }catch(err){
+    renderError(err.message||'The analysis engine hiccuped. Your answers are safe — try again.',sessionId);
+  }
+}
+
+/* ---------------- boot: returning from Stripe? ---------------- */
+(function boot(){
+  const params=new URLSearchParams(window.location.search);
+  const sessionId=params.get('session_id');
+  if(sessionId){
+    const saved=sessionStorage.getItem('pf_state');
+    if(saved){
+      state=JSON.parse(saved);
+      fetchReport(sessionId);
+      return;
+    }
+    app.className='wrap center';
+    app.innerHTML=`<h3 class="display" style="font-size:24px;margin:60px 0 12px">Payment received — but we lost your answers.</h3>
+      <p style="color:var(--body2);margin-bottom:22px">It looks like you returned in a different browser or the session expired. Retake the quiz (2 minutes) and email us with your receipt — we'll make it right.</p>
+      <button class="cta" id="again">Retake the quiz</button>`;
+    document.getElementById('again').onclick=renderLanding;
+    return;
+  }
+  renderLanding();
+})();
+</script>
+</body>
+</html>
