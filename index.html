@@ -65,7 +65,7 @@
 
 <script>
 /* ================= CONFIG — EDIT THESE TWO LINES ================= */
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/REPLACE_ME"; // your $5 Payment Link
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_eVq4gyaqR5L91m7dQn3wQ00"; // your $5 Payment Link
 const TEST_MODE = true; // true = "Simulate payment" button shown (needs ALLOW_TEST_PAYMENTS=true on server). Set false before launch!
 /* ================================================================= */
 
@@ -223,10 +223,10 @@ function renderLanding(){
   app.innerHTML=`
     <div style="display:flex;justify-content:center;margin-bottom:8px">${signalMap({Vision:5,Craft:3,People:6,Drive:4,Risk:5,Structure:2},200,true,true)}</div>
     <div class="mono" style="margin-bottom:16px">18 QUESTIONS · 4 MINUTES · AI-WRITTEN, ONLY FOR YOU</div>
-    <h1 class="display" style="font-size:clamp(38px,6vw,62px);margin-bottom:20px">You already know.<br><span style="color:var(--signal)">You just haven't said it out loud.</span></h1>
+    <h1 class="display" style="font-size:clamp(38px,6vw,62px);margin-bottom:20px">Find the work you were built for.<br><span style="color:var(--signal)">Your career, decoded.</span></h1>
     <p style="font-size:17px;line-height:1.65;color:var(--body2);max-width:520px;margin:0 auto 36px">Answer 18 sharp questions about how you actually work, decide, and take risks. Our AI reads your pattern and writes a personal analysis: the work you should be doing, the business you could build, and the first step to take this week.</p>
     <button class="cta" id="start">Start the quiz — it's free</button>
-    <div class="mono" style="margin-top:18px">THE FULL ANALYSIS IS $5. THE QUIZ COSTS NOTHING.</div>`;
+    <div class="mono" style="margin-top:18px">THE FULL ANALYSIS IS €4.99. THE QUIZ COSTS NOTHING.</div>`;
   document.getElementById('start').onclick=()=>{renderQuiz();};
 }
 
@@ -297,7 +297,7 @@ function renderTeaser(){
         <div class="mono" style="color:var(--signal);margin-bottom:10px">YOUR FULL ANALYSIS IS READY</div>
         <div class="display" style="font-size:22px;margin-bottom:16px">Personal read · 3 career paths · 2 business ideas · first steps</div>
         <input type="email" id="email" placeholder="your@email.com" style="max-width:340px;text-align:center;border-radius:999px;margin-bottom:14px" value="${esc(state.email)}"/>
-        <button class="cta" id="pay" disabled>Unlock my analysis — $5</button>
+        <button class="cta" id="pay" disabled>Unlock my analysis — €4.99</button>
         ${TEST_MODE?'<button class="cta secondary" id="testpay" style="margin-top:10px">TEST MODE · Simulate payment</button>':''}
         <div class="mono" style="margin-top:12px">ONE-TIME. NO SUBSCRIPTION. INSTANT.</div>
       </div>
