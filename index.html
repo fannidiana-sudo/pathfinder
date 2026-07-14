@@ -7,6 +7,15 @@
 <meta name="description" content="18 sharp questions. One AI-written personal analysis: the work you should be doing, the business you could build, and your first step this week." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Sora:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<!-- Google Analytics 4 — consent mode: nothing is stored until the visitor accepts the banner -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C9FFLMDQRE"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
+  gtag('js', new Date());
+  gtag('config','G-C9FFLMDQRE');
+</script>
 <style>
   :root{
     --ink:#231A3C; --paper:#EFECF6; --signal:#FF5C38; --violet:#6C4CF1;
@@ -62,6 +71,24 @@
   <div class="mono" id="counter"></div>
 </div>
 <div id="app" class="wrap"></div>
+
+<footer class="no-print" style="text-align:center;padding:24px 28px 34px">
+  <span class="mono">
+    <a href="/terms.html" style="color:var(--faint);text-decoration:none">TERMS</a>
+    &nbsp;·&nbsp;
+    <a href="/privacy.html" style="color:var(--faint);text-decoration:none">PRIVACY</a>
+    &nbsp;·&nbsp;
+    <a href="mailto:fay@fyrawomen.com" style="color:var(--faint);text-decoration:none">FAY@FYRAWOMEN.COM</a>
+  </span>
+</footer>
+
+<div id="cookiebar" class="no-print" style="display:none;position:fixed;left:16px;right:16px;bottom:16px;z-index:99;background:#fff;border:1.5px solid var(--mist);border-radius:16px;padding:16px 20px;box-shadow:0 8px 30px rgba(35,26,60,.14);max-width:560px;margin:0 auto">
+  <p style="font-size:13px;line-height:1.55;color:var(--body2);margin:0 0 12px">We use cookies for anonymous analytics to improve Pathfinder. No marketing, no creepy stuff. <a href="/privacy.html" style="color:var(--signal)">Privacy Policy</a></p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button id="cookieAccept" class="cta" style="padding:10px 20px;font-size:13px">Accept</button>
+    <button id="cookieDecline" class="cta secondary" style="padding:10px 20px;font-size:13px">Decline</button>
+  </div>
+</div>
 
 <script>
 /* ================= CONFIG — EDIT THESE TWO LINES ================= */
@@ -298,6 +325,7 @@ function renderTeaser(){
         <div class="display" style="font-size:22px;margin-bottom:16px">Personal read · 3 career paths · 2 business ideas · first steps</div>
         <input type="email" id="email" placeholder="your@email.com" style="max-width:340px;text-align:center;border-radius:999px;margin-bottom:14px" value="${esc(state.email)}"/>
         <button class="cta" id="pay" disabled>Unlock my analysis — €4.99</button>
+        <p style="font-size:11px;line-height:1.5;color:var(--faint);max-width:360px;margin:10px auto 0">By purchasing you agree to our <a href="/terms.html" style="color:var(--faint)">Terms</a> and expressly consent to immediate delivery, acknowledging that you lose your 14-day right of withdrawal. All sales are final.</p>
         ${TEST_MODE?'<button class="cta secondary" id="testpay" style="margin-top:10px">TEST MODE · Simulate payment</button>':''}
         <div class="mono" style="margin-top:12px">ONE-TIME. NO SUBSCRIPTION. INSTANT.</div>
       </div>
@@ -412,6 +440,26 @@ async function fetchReport(sessionId){
     renderError(err.message||'The analysis engine hiccuped. Your answers are safe — try again.',sessionId);
   }
 }
+
+/* ---------------- cookie consent ---------------- */
+(function cookies(){
+  let choice=null;
+  try{choice=localStorage.getItem('pf_cookies');}catch(e){}
+  if(choice==='granted'){try{gtag('consent','update',{analytics_storage:'granted'});}catch(e){}}
+  else if(!choice){
+    const bar=document.getElementById('cookiebar');
+    bar.style.display='block';
+    document.getElementById('cookieAccept').onclick=()=>{
+      try{localStorage.setItem('pf_cookies','granted');}catch(e){}
+      try{gtag('consent','update',{analytics_storage:'granted'});}catch(e){}
+      bar.style.display='none';
+    };
+    document.getElementById('cookieDecline').onclick=()=>{
+      try{localStorage.setItem('pf_cookies','denied');}catch(e){}
+      bar.style.display='none';
+    };
+  }
+})();
 
 /* ---------------- boot: returning from Stripe? ---------------- */
 document.getElementById('logo').onclick=()=>{
