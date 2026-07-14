@@ -58,7 +58,7 @@
   <input type="text" name="bot-field" />
 </form>
 <div class="topbar">
-  <div class="mono" style="color:var(--ink)">PATHFINDER</div>
+  <button id="logo" class="mono" style="color:var(--ink);background:none;border:none;cursor:pointer;padding:0" aria-label="Pathfinder home">PATHFINDER</button>
   <div class="mono" id="counter"></div>
 </div>
 <div id="app" class="wrap"></div>
@@ -406,7 +406,7 @@ async function fetchReport(sessionId){
     }
     const report=await res.json();
     // clean the session_id out of the URL so refresh doesn't retry
-    history.replaceState({},'',window.location.pathname);
+    try{history.replaceState({},'',window.location.pathname);}catch(e){}
     renderReport(report);
   }catch(err){
     renderError(err.message||'The analysis engine hiccuped. Your answers are safe — try again.',sessionId);
@@ -414,6 +414,11 @@ async function fetchReport(sessionId){
 }
 
 /* ---------------- boot: returning from Stripe? ---------------- */
+document.getElementById('logo').onclick=()=>{
+  state={idx:0,answers:[],traits:Object.fromEntries(TRAITS.map(t=>[t,0])),email:""};
+  try{history.replaceState({},'',window.location.pathname);}catch(e){}
+  renderLanding();
+};
 (function boot(){
   const params=new URLSearchParams(window.location.search);
   const sessionId=params.get('session_id');
