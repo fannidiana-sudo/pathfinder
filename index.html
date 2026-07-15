@@ -38,11 +38,14 @@
   .wrap{max-width:680px;margin:0 auto;padding:12px 28px 90px}
   .center{text-align:center}
   .cta{font-family:'Sora',sans-serif;font-weight:600;font-size:15px;padding:14px 28px;border-radius:999px;border:none;background:var(--signal);color:#fff;cursor:pointer;transition:transform .15s;box-shadow:0 4px 20px rgba(255,92,56,.35)}
-  .cta:hover{transform:translateY(-2px)}
   .cta:disabled{opacity:.5;cursor:not-allowed;transform:none}
   .cta.secondary{background:transparent;color:var(--ink);border:1.5px solid var(--ink);box-shadow:none}
   .opt{display:block;width:100%;text-align:left;padding:16px 20px;border-radius:14px;border:1.5px solid var(--mist);background:#fff;color:var(--ink);font-family:'Sora',sans-serif;font-size:15px;line-height:1.45;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s;margin-bottom:12px}
-  .opt:hover{border-color:var(--signal);transform:translateX(4px);box-shadow:0 4px 16px rgba(35,26,60,.08)}
+  @media (hover:hover) and (pointer:fine){
+    .cta:hover{transform:translateY(-2px)}
+    .opt:hover{border-color:var(--signal);transform:translateX(4px);box-shadow:0 4px 16px rgba(35,26,60,.08)}
+  }
+  .opt:active{border-color:var(--signal)}
   .progress{height:4px;background:var(--mist);border-radius:99px;margin-bottom:36px}
   .progress>div{height:100%;background:var(--signal);border-radius:99px;transition:width .4s}
   .card{background:#fff;border:1.5px solid var(--mist);border-radius:16px;padding:20px 22px;margin-bottom:12px;text-align:left}
