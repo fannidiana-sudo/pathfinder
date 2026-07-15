@@ -43,9 +43,9 @@
   .opt{display:block;width:100%;text-align:left;padding:16px 20px;border-radius:14px;border:1.5px solid var(--mist);background:#fff;color:var(--ink);font-family:'Sora',sans-serif;font-size:15px;line-height:1.45;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s;margin-bottom:12px}
   @media (hover:hover) and (pointer:fine){
     .cta:hover{transform:translateY(-2px)}
-    .opt:hover{border-color:var(--signal);transform:translateX(4px);box-shadow:0 4px 16px rgba(35,26,60,.08)}
+    .opt:hover{border-color:var(--signal)}
   }
-  .opt:active{border-color:var(--signal)}
+  .opt.picked{border-color:var(--signal);background:#FFF3EF}
   .progress{height:4px;background:var(--mist);border-radius:99px;margin-bottom:36px}
   .progress>div{height:100%;background:var(--signal);border-radius:99px;transition:width .4s}
   .card{background:#fff;border:1.5px solid var(--mist);border-radius:16px;padding:20px 22px;margin-bottom:12px;text-align:left}
@@ -308,11 +308,17 @@ function renderQuiz(){
   } else {
     app.querySelectorAll('.opt').forEach(btn=>{
       btn.onclick=()=>{
+        if(state.locked) return;
+        state.locked=true;
+        btn.classList.add('picked');
         const o=cur.opts[Number(btn.dataset.i)];
-        for(const [k,v] of Object.entries(o.w||{})) state.traits[k]+=v;
-        state.answers.push({question:cur.q,answer:o.t,w:o.w||{}});
-        state.idx++;
-        state.idx<QUESTIONS.length ? renderQuiz() : renderTeaser();
+        setTimeout(()=>{
+          state.locked=false;
+          for(const [k,v] of Object.entries(o.w||{})) state.traits[k]+=v;
+          state.answers.push({question:cur.q,answer:o.t,w:o.w||{}});
+          state.idx++;
+          state.idx<QUESTIONS.length ? renderQuiz() : renderTeaser();
+        },180);
       };
     });
   }
